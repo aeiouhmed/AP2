@@ -1,0 +1,49 @@
+import torch
+import random
+import numpy as np
+
+class BaseAgent:
+    """
+    A base class for DQN agents.
+    """
+    def __init__(self, env, replay_buffer, model, target_model, optimizer, loss_fn, gamma, epsilon_start, epsilon_end, epsilon_decay):
+        """
+        Initialize the agent.
+        """
+        self.env = env
+        self.replay_buffer = replay_buffer
+        self.model = model
+        self.target_model = target_model
+        self.optimizer = optimizer
+        self.loss_fn = loss_fn
+        self.gamma = gamma
+        self.epsilon_start = epsilon_start
+        self.epsilon_end = epsilon_end
+        self.epsilon_decay = epsilon_decay
+        self.steps_done = 0
+
+    def select_action(self, state):
+        """
+        Select an action using an epsilon-greedy policy.
+        """
+        sample = random.random()
+        eps_threshold = self.epsilon_end + (self.epsilon_start - self.epsilon_end) * \
+            np.exp(-1. * self.steps_done / self.epsilon_decay)
+        self.steps_done += 1
+        if sample > eps_threshold:
+            with torch.no_grad():
+                return self.model(torch.tensor(state).unsqueeze(0)).max(1)[1].view(1, 1)
+        else:
+            return torch.tensor([[random.randrange(self.env.action_space.n)]], dtype=torch.long)
+
+    def train(self, batch_size):
+        """
+        Train the agent.
+        """
+        raise NotImplementedError
+
+    def update_target_model(self):
+        """
+        Update the target model with the weights of the online model.
+        """
+        self.target_model.load_state_dict(self.model.state_dict())

@@ -1,13 +1,15 @@
+import gym
 import gym_super_mario_bros
 from nes_py.wrappers import JoypadSpace
-from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
+from gym_super_mario_bros.actions import COMPLEX_MOVEMENT
 import keyboard
+import time
 
 def main():
-    env = gym_super_mario_bros.make('SuperMarioBros-v0')
-    env = JoypadSpace(env, SIMPLE_MOVEMENT)
+    env = gym.make('SuperMarioBros-v0')
+    env = JoypadSpace(env, COMPLEX_MOVEMENT)
 
-    print("Human control enabled. Use arrow keys to move, 'a' to jump, 's' to run.")
+    print("Human control enabled. Use WASD to move and jump.")
     print("Press 'q' to quit.")
 
     done = True
@@ -16,27 +18,23 @@ def main():
             state = env.reset()
         
         action = 0  # Default action: NOOP
-        if keyboard.is_pressed('right'):
-            action = 5  # Right
-        elif keyboard.is_pressed('left'):
-            action = 1  # Left
+        if keyboard.is_pressed('d'):
+            action = 1  # Right
+        elif keyboard.is_pressed('a'):
+            action = 6  # Left
         
-        if keyboard.is_pressed('a'):
-            if keyboard.is_pressed('right'):
-                action = 6  # Right + Jump
-            elif keyboard.is_pressed('left'):
-                action = 2  # Left + Jump
+        if keyboard.is_pressed('w'):
+            if keyboard.is_pressed('d'):
+                action = 2 # Right + Jump
+            elif keyboard.is_pressed('a'):
+                action = 7 # Left + Jump
             else:
-                action = 3 # Jump
-        
-        if keyboard.is_pressed('s'):
-            if keyboard.is_pressed('right'):
-                action = 7 # Right + Run
-            elif keyboard.is_pressed('left'):
-                action = 4 # Left + Run
+                action = 5 # Jump
 
-        state, reward, done, info = env.step(action)
+
+        _, _, done, _ = env.step(action)
         env.render()
+        time.sleep(0.01)
 
         if keyboard.is_pressed('q'):
             break
