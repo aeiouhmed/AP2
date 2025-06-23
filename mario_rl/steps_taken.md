@@ -73,3 +73,13 @@
 
 12. **Configuration:**
     *   Created the `configs` directory and added `dqn_config.py` and `ddqn_config.py` for managing hyperparameters.
+
+13. **Bug Fixing and Refinements:**
+    *   Corrected model and optimizer instantiation in `train.py`.
+    *   Fixed several issues in `evaluate.py` including redundant model loading and incorrect rendering.
+    *   Added the `JoypadSpace` wrapper and corrected the human takeover logic in `play_agent.py`.
+    *   Corrected the `dueling_agent.py` factory function to properly use the model and target_model arguments.
+    *   Updated `reward_shaping.py` to include rewards for getting power-ups.
+    *   Updated `base_agent.py` to handle Mario's size and firing ability.
+    *   Fixed a `KeyError` in `train.py` by initializing the `info` dictionary.
+    *   Fixed a `TypeError` in `train.py` by passing the `info` dictionary to the `select_action` method.

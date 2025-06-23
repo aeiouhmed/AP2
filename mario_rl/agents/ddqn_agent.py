@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 from .base_agent import BaseAgent
 
 class DDQNAgent(BaseAgent):
@@ -14,7 +15,7 @@ class DDQNAgent(BaseAgent):
         
         states, actions, rewards, next_states, dones = self.replay_buffer.sample(batch_size)
 
-        states = torch.tensor(states, dtype=torch.float32)
+        states = torch.from_numpy(np.array(states)).float()
         actions = torch.tensor(actions, dtype=torch.long)
         rewards = torch.tensor(rewards, dtype=torch.float32)
         next_states = torch.tensor(next_states, dtype=torch.float32)

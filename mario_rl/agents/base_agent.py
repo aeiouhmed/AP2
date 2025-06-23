@@ -22,7 +22,7 @@ class BaseAgent:
         self.epsilon_decay = epsilon_decay
         self.steps_done = 0
 
-    def select_action(self, state):
+    def select_action(self, state, info):
         """
         Select an action using an epsilon-greedy policy.
         """
@@ -32,9 +32,18 @@ class BaseAgent:
         self.steps_done += 1
         if sample > eps_threshold:
             with torch.no_grad():
-                return self.model(torch.tensor(state).unsqueeze(0)).max(1)[1].view(1, 1)
+                q_values = self.model(torch.tensor(state).unsqueeze(0))
+                # If not in fireball state, prevent fireball actions
+                if info['status'] != 'fireball':
+                    q_values[0][3] = -1e8  # Fireball right
+                    q_values[0][8] = -1e8  # Fireball left
+                return q_values.max(1)[1].view(1, 1)
         else:
-            return torch.tensor([[random.randrange(self.env.action_space.n)]], dtype=torch.long)
+            action = random.randrange(self.env.action_space.n)
+            # If not in fireball state, prevent fireball actions
+            if info['status'] != 'fireball' and action in [3, 8]:
+                return torch.tensor([[0]], dtype=torch.long) # Default to no-op
+            return torch.tensor([[action]], dtype=torch.long)
 
     def train(self, batch_size):
         """

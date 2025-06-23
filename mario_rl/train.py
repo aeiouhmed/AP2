@@ -53,13 +53,17 @@ def train(args, hyperparameters=None):
     
     # Create agent
     if args.dueling:
+        model = DuelingDQN(env.observation_space.shape, env.action_space.n)
+        target_model = DuelingDQN(env.observation_space.shape, env.action_space.n)
+        target_model.load_state_dict(model.state_dict())
+        optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
         agent = create_dueling_agent(
             args.agent,
             env,
             replay_buffer,
-            DuelingDQN,
-            DuelingDQN,
-            torch.optim.Adam(DuelingDQN(env.observation_space.shape, env.action_space.n).parameters(), lr=args.lr),
+            model,
+            target_model,
+            optimizer,
             torch.nn.MSELoss(),
             args.gamma,
             args.epsilon_start,
@@ -67,13 +71,17 @@ def train(args, hyperparameters=None):
             args.epsilon_decay
         )
     else:
+        model = BaseCNN(env.observation_space.shape, env.action_space.n)
+        target_model = BaseCNN(env.observation_space.shape, env.action_space.n)
+        target_model.load_state_dict(model.state_dict())
+        optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
         if args.agent == 'dqn':
             agent = DQNAgent(
                 env,
                 replay_buffer,
-                BaseCNN(env.observation_space.shape, env.action_space.n),
-                BaseCNN(env.observation_space.shape, env.action_space.n),
-                torch.optim.Adam(BaseCNN(env.observation_space.shape, env.action_space.n).parameters(), lr=args.lr),
+                model,
+                target_model,
+                optimizer,
                 torch.nn.MSELoss(),
                 args.gamma,
                 args.epsilon_start,
@@ -84,9 +92,9 @@ def train(args, hyperparameters=None):
             agent = DDQNAgent(
                 env,
                 replay_buffer,
-                BaseCNN(env.observation_space.shape, env.action_space.n),
-                BaseCNN(env.observation_space.shape, env.action_space.n),
-                torch.optim.Adam(BaseCNN(env.observation_space.shape, env.action_space.n).parameters(), lr=args.lr),
+                model,
+                target_model,
+                optimizer,
                 torch.nn.MSELoss(),
                 args.gamma,
                 args.epsilon_start,
@@ -101,9 +109,10 @@ def train(args, hyperparameters=None):
     episode_length = 0
     episode = 0
     total_rewards = []
+    info = {'status': 'small'}
     for step in range(args.total_steps):
         # Select and perform an action
-        action = agent.select_action(state)
+        action = agent.select_action(state, info)
         next_state, reward, done, info = env.step(action.item())
         
         # Update behavior tracker
@@ -142,11 +151,11 @@ def train(args, hyperparameters=None):
             torch.save(agent.model.state_dict(), f'models/{args.agent}_{"dueling" if args.dueling else ""}_{step}.pth')
 
         # Visualize the agent's gameplay
-        if episode <= 50:
-            env.render()
-        if episode > 0 and episode % 50 == 0:
-            visualizer = Visualizer(env, agent, f'recordings/{args.agent_name}/{args.agent}_{"dueling" if args.dueling else ""}_{episode}.gif')
-            visualizer.record(episode, episode_reward)
+        # if episode <= 50:
+        #     env.render()
+        # if episode > 0 and episode % 50 == 0:
+        #     visualizer = Visualizer(env, agent, f'recordings/{args.agent_name}/{args.agent}_{"dueling" if args.dueling else ""}_{episode}.gif')
+        #     visualizer.record(episode, episode_reward)
 
         # Evaluate the agent
         if step % args.eval_interval == 0:

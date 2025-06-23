@@ -36,15 +36,8 @@ def main(args):
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
 
-        for agent in agents:
-            if args.dueling:
-                model = DuelingDQN(gym.make('SuperMarioBros-v0').observation_space.shape, gym.make('SuperMarioBros-v0').action_space.n)
-            else:
-                model = BaseCNN(gym.make('SuperMarioBros-v0').observation_space.shape, gym.make('SuperMarioBros-v0').action_space.n)
-            
-            model.load_state_dict(torch.load(model_path))
-            model.eval()
-
+        for i, agent in enumerate(agents):
+            model_path = args.model_paths[i]
             for world in range(1, 9):
                 for stage in range(1, 5):
                     try:
@@ -58,22 +51,22 @@ def main(args):
                         done = False
                         total_reward = 0
                         while not done:
+                            env.render()
                             with torch.no_grad():
                                 input_tensor = state.unsqueeze(0)
-                                action = model(input_tensor).max(1)[1].view(1, 1)
-                        
-                        if args.saliency:
-                            saliency = Saliency(model)
-                            grads = saliency.attribute(input_tensor, target=action.item())
-                            saliency_map = np.transpose(grads.squeeze().cpu().detach().numpy(), (1, 2, 0))
+                                action = agent(input_tensor).max(1)[1].view(1, 1)
                             
-                            plt.imshow(saliency_map)
-                            plt.show()
+                            if args.saliency:
+                                saliency = Saliency(agent)
+                                grads = saliency.attribute(input_tensor, target=action.item())
+                                saliency_map = np.transpose(grads.squeeze().cpu().detach().numpy(), (1, 2, 0))
+                                
+                                plt.imshow(saliency_map)
+                                plt.pause(0.01) # Pause to update the plot
 
-                        state, reward, done, _ = env.step(action.item())
-                        state = torch.tensor(state, dtype=torch.float32).div(255)
-                        env.render()
-                        total_reward += reward
+                            next_state, reward, done, _ = env.step(action.item())
+                            state = torch.tensor(next_state, dtype=torch.float32).div(255)
+                            total_reward += reward
                         
                         writer.writerow({'algorithm': model_path, 'level': f'{world}-{stage}', 'total_reward': total_reward})
                         print(f"Algorithm: {model_path}, World {world}-{stage}: Total reward = {total_reward}")

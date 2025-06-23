@@ -10,6 +10,7 @@ class RewardShaper(gym.Wrapper):
         self.previous_coins = 0
         self.previous_life = 2
         self.previous_score = 0
+        self.previous_status = 'small'
 
     def step(self, action):
         obs, reward, done, info = self.env.step(action)
@@ -27,6 +28,13 @@ class RewardShaper(gym.Wrapper):
         if score_diff > 0:
             reward += score_diff * 0.1
         self.previous_score = info['score']
+        
+        # Reward for getting power-ups
+        if info['status'] == 'tall' and self.previous_status == 'small':
+            reward += 50
+        if info['status'] == 'fireball' and self.previous_status == 'tall':
+            reward += 100
+        self.previous_status = info['status']
         
         # Penalty for losing a life
         if info['life'] < self.previous_life:
@@ -52,4 +60,5 @@ class RewardShaper(gym.Wrapper):
         self.previous_coins = 0
         self.previous_life = 2
         self.previous_score = 0
+        self.previous_status = 'small'
         return obs
