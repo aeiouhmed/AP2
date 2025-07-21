@@ -11,6 +11,7 @@ class BehaviorTracker:
             'coins_collected': 0,
             'levels_completed': 0,
         }
+        self.episode_max_x_pos = 0
         self.x_pos_history = []
         self.visualizer = visualizer
 
@@ -20,9 +21,11 @@ class BehaviorTracker:
         """
         if info['x_pos'] > self.milestones['max_x_pos']:
             self.milestones['max_x_pos'] = info['x_pos']
-            print(f"New milestone: Reached x-position {info['x_pos']}")
             if self.visualizer:
                 self.visualizer.record_milestone('max_x_pos', episode)
+        
+        if info['x_pos'] > self.episode_max_x_pos:
+            self.episode_max_x_pos = info['x_pos']
 
         self.x_pos_history.append(info['x_pos'])
         if len(self.x_pos_history) > 100:
@@ -51,6 +54,12 @@ class BehaviorTracker:
             if self.visualizer:
                 self.visualizer.record_milestone('level_completion', episode)
 
+    def reset_episode_stats(self):
+        """
+        Reset statistics that are tracked per episode.
+        """
+        self.episode_max_x_pos = 0
+
     def detect_waiting(self):
         """
         Detect if the agent is waiting for an enemy to pass.
@@ -65,4 +74,4 @@ class BehaviorTracker:
         """
         if len(self.x_pos_history) == 100:
             if self.x_pos_history[-1] < self.x_pos_history[0]:
-                print("Strategic behavior detected: Backtracking")
+                pass

@@ -90,3 +90,39 @@ class FrameStack(gym.Wrapper):
         self.frames = np.roll(self.frames, -1, axis=0)
         self.frames[-1] = obs
         return self.frames, reward, done, info
+
+class ProlongedJumpWrapper(gym.Wrapper):
+    """
+    Wrapper to make every jump a full-height jump by repeating the action.
+    """
+    def __init__(self, env, jump_duration=20):
+        super().__init__(env)
+        self.jump_duration = jump_duration
+        self.jump_actions = {2, 4, 5, 7, 9}  # Action indices that involve jumping
+        self.jump_counter = 0
+        self.action_to_repeat = 0
+
+    def step(self, action):
+        # If a new jump action is initiated, start the counter
+        if action in self.jump_actions and self.jump_counter == 0:
+            self.jump_counter = self.jump_duration
+            self.action_to_repeat = action
+
+        # If a jump is in progress, repeat the jump action
+        if self.jump_counter > 0:
+            action_to_take = self.action_to_repeat
+            self.jump_counter -= 1
+        else:
+            action_to_take = action
+
+        obs, reward, done, info = self.env.step(action_to_take)
+
+        # If the episode ends, reset the jump counter
+        if done:
+            self.jump_counter = 0
+            
+        return obs, reward, done, info
+
+    def reset(self, **kwargs):
+        self.jump_counter = 0
+        return self.env.reset(**kwargs)

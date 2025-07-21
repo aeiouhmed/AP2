@@ -1,0 +1,8 @@
+Step: 0, Episode: 0, Stage: 1-1, Score: 0, Time: 400, Episode Max X: 40, All-Time Max X: 40, Episode Reward: 40.0
+Step: 500, Episode: 0, Stage: 1-1, Score: 100, Time: 300, Episode Max X: 186, All-Time Max X: 186, Episode Reward: 420.5
+Step: 1000, Episode: 0, Stage: 1-1, Score: 100, Time: 200, Episode Max X: 332, All-Time Max X: 332, Episode Reward: 778.5
+Step: 1500, Episode: 0, Stage: 1-1, Score: 1400, Time: 103, Episode Max X: 361, All-Time Max X: 361, Episode Reward: 944.5
+Step: 2000, Episode: 0, Stage: 1-1, Score: 1450, Time: 3, Episode Max X: 594, All-Time Max X: 594, Episode Reward: 1512.5
+Step: 2500, Episode: 1, Stage: 1-1, Score: 0, Time: 303, Episode Max X: 113, All-Time Max X: 594, Episode Reward: 125.5
+Step: 3000, Episode: 1, Stage: 1-1, Score: 0, Time: 203, Episode Max X: 166, All-Time Max X: 594, Episode Reward: 324.5
+Step: 3500, Episode: 1, Stage: 1-1, Score: 0, Time: 378, Episode Max X: 176, All-Time Max X: 594, Episode Reward: 186.5

@@ -19,6 +19,7 @@ class Logger:
         Log a scalar value.
         """
         self.writer.add_scalar(tag, value, step)
+        self.writer.flush()
 
     def log_episode(self, episode, total_reward, episode_length, step, info):
         """
@@ -49,6 +50,13 @@ class Logger:
         """
         self.log_scalar('train/loss', loss, step)
         self.log_scalar('train/q_value', q_value, step)
+
+    def log_milestones(self, milestones, episode):
+        """
+        Log milestones.
+        """
+        for key, value in milestones.items():
+            self.log_scalar(f'milestones/{key}', value, episode)
 
     def close(self):
         """

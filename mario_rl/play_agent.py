@@ -2,9 +2,11 @@ import gym
 import torch
 import argparse
 import keyboard
+import time
 from nes_py.wrappers import JoypadSpace
 from gym_super_mario_bros.actions import COMPLEX_MOVEMENT
-from .environment.wrappers import GrayScaleObservation, ResizeObservation, FrameStack
+from .environment.wrappers import GrayScaleObservation, ResizeObservation, FrameStack, SkipFrame, ProlongedJumpWrapper
+from .environment.reward_shaping import RewardShaper
 from .models.networks import BaseCNN, DuelingDQN
 
 def get_human_action():
@@ -24,10 +26,21 @@ def get_human_action():
     return action
 
 def main(args):
+    # Create a dummy environment to get the correct observation shape
+    dummy_env = gym.make('SuperMarioBros-v0')
+    dummy_env = JoypadSpace(dummy_env, COMPLEX_MOVEMENT)
+    dummy_env = ProlongedJumpWrapper(dummy_env)
+    dummy_env = SkipFrame(dummy_env, skip=4)
+    dummy_env = GrayScaleObservation(dummy_env)
+    dummy_env = ResizeObservation(dummy_env, shape=84)
+    dummy_env = FrameStack(dummy_env, num_stack=4)
+    
     if args.dueling:
-        model = DuelingDQN(gym.make('SuperMarioBros-v0').observation_space.shape, len(COMPLEX_MOVEMENT))
+        model = DuelingDQN(dummy_env.observation_space.shape, len(COMPLEX_MOVEMENT))
     else:
-        model = BaseCNN(gym.make('SuperMarioBros-v0').observation_space.shape, len(COMPLEX_MOVEMENT))
+        model = BaseCNN(dummy_env.observation_space.shape, len(COMPLEX_MOVEMENT))
+    
+    dummy_env.close()
     
     model.load_state_dict(torch.load(args.model_path))
     model.eval()
@@ -37,19 +50,24 @@ def main(args):
             try:
                 env = gym.make(f'SuperMarioBros-{world}-{stage}-v0')
                 env = JoypadSpace(env, COMPLEX_MOVEMENT)
+                env = ProlongedJumpWrapper(env)
+                env = SkipFrame(env, skip=4)
                 env = GrayScaleObservation(env)
                 env = ResizeObservation(env, shape=84)
                 env = FrameStack(env, num_stack=4)
+                env = RewardShaper(env)
 
                 state = env.reset()
                 state = torch.tensor(state, dtype=torch.float32).div(255)
                 done = False
                 total_reward = 0
                 human_control = False
+                last_toggle_time = 0
                 while not done:
-                    if args.human_takeover and keyboard.is_pressed('h'):
+                    if args.human_takeover and keyboard.is_pressed('h') and (time.time() - last_toggle_time > 0.5):
                         human_control = not human_control
                         print(f"Human control: {human_control}")
+                        last_toggle_time = time.time()
                     
                     if human_control:
                         action = get_human_action()

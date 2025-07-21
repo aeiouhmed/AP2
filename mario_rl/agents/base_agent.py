@@ -32,7 +32,11 @@ class BaseAgent:
         self.steps_done += 1
         if sample > eps_threshold:
             with torch.no_grad():
-                q_values = self.model(torch.tensor(state).unsqueeze(0))
+                if isinstance(state, np.ndarray):
+                    state_tensor = torch.from_numpy(state).float().div(255.0).unsqueeze(0)
+                else:
+                    state_tensor = state.unsqueeze(0)
+                q_values = self.model(state_tensor)
                 # If not in fireball state, prevent fireball actions
                 if info['status'] != 'fireball':
                     q_values[0][3] = -1e8  # Fireball right

@@ -1,0 +1,1 @@
+Step: 0, Episode: 0, Stage: 1-1, Score: 0, Time: 396, Episode Max X: 194, All-Time Max X: 194, Episode Reward: 11790.0
